@@ -5,15 +5,17 @@ import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.asComposeCanvas
 import com.mojang.blaze3d.pipeline.TextureTarget
 import com.mojang.blaze3d.systems.RenderSystem
+import com.mojang.blaze3d.vertex.VertexSorting
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
-import net.minecraft.util.ArrayListDeque
 import org.jetbrains.skia.BackendRenderTarget
 import org.jetbrains.skia.ColorSpace
 import org.jetbrains.skia.Surface
 import org.jetbrains.skia.SurfaceColorFormat
 import org.jetbrains.skia.SurfaceOrigin
+import org.joml.Matrix4f
 import org.lwjgl.opengl.GL30
+import java.util.ArrayDeque
 import java.util.Deque
 
 class SkiaSurface {
@@ -66,7 +68,7 @@ class SkiaSurface {
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, 0)
     }
 
-    private val recordedCalls: Deque<GuiGraphics.() -> Unit> = ArrayListDeque()
+    private val recordedCalls: Deque<GuiGraphics.() -> Unit> = ArrayDeque()
 
     fun record(call: GuiGraphics.() -> Unit) {
         recordedCalls.push(call)
@@ -75,19 +77,21 @@ class SkiaSurface {
     fun render(guiGraphics: GuiGraphics, render: (Canvas) -> Unit) {
         ensureBuffer()
         val main = Minecraft.getInstance().mainRenderTarget
+        val projection = Matrix4f(RenderSystem.getProjectionMatrix())
         GL30.glBindFramebuffer(GL30.GL_FRAMEBUFFER, buffer)
         main.blitToScreen(main.width, main.height, true)
-        
+
         SkiaContext.run {
             render(surface.canvas.asComposeCanvas())
             SkiaContext.directContext.resetGLAll()
             SkiaContext.directContext.flush()
         }
-        
+
         main.bindWrite(true)
         RenderSystem.enableBlend()
         texture.blitToScreen(main.width, main.height, false)
-        
+        RenderSystem.setProjectionMatrix(projection, VertexSorting.DISTANCE_TO_ORIGIN)
+
         while (true) {
             val call = recordedCalls.poll() ?: break
             call.invoke(guiGraphics)

@@ -15,7 +15,6 @@ import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInWindow
 import com.mojang.blaze3d.systems.RenderSystem
-import com.mojang.blaze3d.vertex.BufferUploader
 import com.mojang.blaze3d.vertex.DefaultVertexFormat
 import com.mojang.blaze3d.vertex.Tesselator
 import com.mojang.blaze3d.vertex.VertexFormat
@@ -82,11 +81,12 @@ fun Texture(
                         RenderSystem.setShader(GameRenderer::getPositionTexShader)
                         val matrix4f = pose().last().pose()
                         val tesselator = Tesselator.getInstance()
-                        val buffer = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX)
-                        buffer.addVertex(matrix4f, 0f, heightGui, 0f).setUv(u, v + h)
-                        buffer.addVertex(matrix4f, widthGui, heightGui, 0f).setUv(u + w, v + h)
-                        buffer.addVertex(matrix4f, widthGui, 0f, 0f).setUv(u + w, v)
-                        buffer.addVertex(matrix4f, 0f, 0f, 0f).setUv(u, v)
+                        val buffer = tesselator.builder
+                        buffer.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX)
+                        buffer.vertex(matrix4f, 0f, heightGui, 10f).uv(u, v + h).endVertex()
+                        buffer.vertex(matrix4f, widthGui, heightGui, 10f).uv(u + w, v + h).endVertex()
+                        buffer.vertex(matrix4f, widthGui, 0f, 10f).uv(u + w, v).endVertex()
+                        buffer.vertex(matrix4f, 0f, 0f, 10f).uv(u, v).endVertex()
                         val scissorDisabled = !GL30.glIsEnabled(GL30.GL_SCISSOR_TEST)
                         if (scissorDisabled) RenderSystem.enableScissor(
                             bounds.left.toInt(),
@@ -94,7 +94,7 @@ fun Texture(
                             bounds.width.toInt(),
                             bounds.height.toInt()
                         )
-                        BufferUploader.drawWithShader(buffer.buildOrThrow())
+                        tesselator.end()
                         if (scissorDisabled) RenderSystem.disableScissor()
                         pose().popPose()
                     }

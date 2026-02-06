@@ -17,7 +17,7 @@ object TextureTest : TestCommand("texture") {
             contentAlignment = Alignment.Center
         ) {
             Components.Texture(
-                texture = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/block/dirt.png"),
+                texture = ResourceLocation("minecraft", "textures/block/dirt.png"),
                 modifier = Modifier.size(128.dp)
             )
         }

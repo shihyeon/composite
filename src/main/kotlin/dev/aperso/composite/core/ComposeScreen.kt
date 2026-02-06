@@ -175,10 +175,13 @@ open class ComposeScreen(
         return true
     }
 
-    override fun mouseScrolled(mouseX: Double, mouseY: Double, scrollX: Double, scrollY: Double): Boolean {
-        this.scrollX += scrollX.toFloat()
-        this.scrollY -= scrollY.toFloat()
-        return super.mouseScrolled(mouseX, mouseY, scrollX, scrollY)
+    override fun mouseScrolled(mouseX: Double, mouseY: Double, delta: Double): Boolean {
+        if (hasShiftDown() || hasAltDown()) {
+            this.scrollX -= delta.toFloat()
+        } else {
+            this.scrollY -= delta.toFloat()
+        }
+        return super.mouseScrolled(mouseX, mouseY, delta)
     }
 
     fun keyEvent(type: KeyEventType, keyCode: Int, modifiers: Int): KeyEvent {

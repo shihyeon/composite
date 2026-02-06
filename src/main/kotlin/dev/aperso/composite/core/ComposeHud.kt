@@ -10,7 +10,6 @@ import androidx.compose.ui.unit.IntSize
 import dev.aperso.composite.skia.LocalSkiaSurface
 import dev.aperso.composite.skia.SkiaSurface
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback
-import net.minecraft.client.DeltaTracker
 import net.minecraft.client.Minecraft
 import net.minecraft.client.gui.GuiGraphics
 import org.jetbrains.skiko.currentNanoTime
@@ -28,7 +27,7 @@ class ComposeHud(content: @Composable () -> Unit): HudRenderCallback {
         }
     }
 
-    override fun onHudRender(guiGraphics: GuiGraphics, deltaTracker: DeltaTracker) {
+    override fun onHudRender(guiGraphics: GuiGraphics, tickDelta: Float) {
         val window = Minecraft.getInstance().window
         scene.size = IntSize(window.width, window.height)
         scene.density = Density(window.guiScale.toFloat())

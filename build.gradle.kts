@@ -21,34 +21,39 @@ repositories {
 
 val natives = arrayListOf<File>()
 
+val transitiveInclude by configurations.creating {
+    isCanBeResolved = true
+    isCanBeConsumed = false
+}
+
 dependencies {
-    minecraft("com.mojang:minecraft:1.21.1")
+    minecraft("com.mojang:minecraft:1.20.1")
     mappings(loom.officialMojangMappings())
 
     modImplementation("net.fabricmc:fabric-loader:0.16.14")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.116.7+1.21.1")
+    modImplementation("net.fabricmc.fabric-api:fabric-api:0.92.6+1.20.1")
     modImplementation("net.fabricmc:fabric-language-kotlin:1.13.8+kotlin.2.3.0")
 
-    val transitiveInclude by configurations.creating
-    transitiveInclude(implementation(compose.material3)!!)
-    transitiveInclude(implementation(compose.desktop.windows_x64)!!)
-    transitiveInclude(implementation(compose.desktop.windows_arm64)!!)
-    transitiveInclude(implementation(compose.desktop.macos_x64)!!)
-    transitiveInclude(implementation(compose.desktop.macos_arm64)!!)
-    transitiveInclude(implementation(compose.desktop.linux_x64)!!)
-    transitiveInclude(implementation(compose.desktop.linux_arm64)!!)
-    transitiveInclude.resolvedConfiguration.resolvedArtifacts.forEach {
-        val id = it.moduleVersion.id
-        if (id.group == "org.jetbrains.skiko") {
-            natives.add(it.file)
-        } else {
-            include(id.toString())
-        }
+    fun addImplementationInclude(dep: Any) {
+        implementation(dep)
+        transitiveInclude(dep)
     }
+
+    addImplementationInclude(compose.material3)
+    addImplementationInclude(compose.desktop.windows_x64)
+    addImplementationInclude(compose.desktop.windows_arm64)
+    addImplementationInclude(compose.desktop.macos_x64)
+    addImplementationInclude(compose.desktop.macos_arm64)
+    addImplementationInclude(compose.desktop.linux_x64)
+    addImplementationInclude(compose.desktop.linux_arm64)
 }
 
 tasks.jar {
-    from(natives.map { zipTree(it) })
+    from({
+        transitiveInclude.resolvedConfiguration.resolvedArtifacts.map { artifact ->
+            zipTree(artifact.file)
+        }
+    })
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
