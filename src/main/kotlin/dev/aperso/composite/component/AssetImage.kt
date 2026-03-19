@@ -51,13 +51,13 @@ private class AssetTexture(
     nativeImage: NativeImage,
     filterQuality: FilterQuality,
 ) : AbstractTexture() {
-    val imgWidth = nativeImage.width
-    val imgHeight = nativeImage.height
+    val width = nativeImage.width
+    val height = nativeImage.height
 
     init {
         val device = RenderSystem.getDevice()
         val usage = GpuTexture.USAGE_COPY_DST or GpuTexture.USAGE_TEXTURE_BINDING
-        texture = device.createTexture({ label }, usage, TextureFormat.RGBA8, imgWidth, imgHeight, 1, 1)
+        texture = device.createTexture({ label }, usage, TextureFormat.RGBA8, width, height, 1, 1)
         textureView = device.createTextureView(texture!!)
         sampler = when (filterQuality) {
             FilterQuality.None -> RenderSystem.getSamplerCache().getRepeat(FilterMode.NEAREST)
@@ -76,9 +76,47 @@ private class AssetTexture(
 }
 
 private data class AssetTextureData(
-    val tex: AssetTexture,
-    val texId: Identifier,
+    val texture: AssetTexture,
+    val textureId: Identifier,
 )
+
+private object AssetTextureCache {
+    private data class CacheKey(val resource: Identifier, val filterQuality: FilterQuality)
+    private class Entry(val data: AssetTextureData, var refCount: Int = 1)
+
+    private val entries = HashMap<CacheKey, Entry>()
+
+    @Synchronized
+    fun acquire(resource: Identifier, filterQuality: FilterQuality): AssetTextureData? {
+        val entry = entries[CacheKey(resource, filterQuality)] ?: return null
+        entry.refCount++
+        return entry.data
+    }
+
+    @Synchronized
+    fun putOrMerge(resource: Identifier, filterQuality: FilterQuality, data: AssetTextureData): AssetTextureData {
+        val key = CacheKey(resource, filterQuality)
+        val existing = entries[key]
+        return if (existing != null) {
+            data.texture.close()
+            existing.refCount++
+            existing.data
+        } else {
+            entries[key] = Entry(data)
+            data
+        }
+    }
+
+    @Synchronized
+    fun release(resource: Identifier, filterQuality: FilterQuality) {
+        val key = CacheKey(resource, filterQuality)
+        val entry = entries[key] ?: return
+        if (--entry.refCount <= 0) {
+            entry.data.texture.close()
+            entries.remove(key)
+        }
+    }
+}
 
 @Composable
 fun AssetImage(
@@ -97,13 +135,22 @@ fun AssetImage(
     var textureData by remember { mutableStateOf<AssetTextureData?>(null) }
     var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
 
-    DisposableEffect(resource) {
+    DisposableEffect(resource, filterQuality) {
         onDispose {
-            textureData?.tex?.close()
+            AssetTextureCache.release(resource, filterQuality)
+            textureData = null
         }
     }
 
     LaunchedEffect(resource, filterQuality) {
+        textureData = null
+
+        val cached = AssetTextureCache.acquire(resource, filterQuality)
+        if (cached != null) {
+            textureData = cached
+            return@LaunchedEffect
+        }
+
         val nativeImage = withContext(Dispatchers.IO) {
             try {
                 val rm = minecraft.resourceManager
@@ -116,14 +163,19 @@ fun AssetImage(
         } ?: return@LaunchedEffect
 
         val data = suspendCancellableCoroutine<AssetTextureData?> { cont ->
+            cont.invokeOnCancellation { nativeImage.close() }
             minecraft.execute {
                 try {
-                    val texId = Identifier.fromNamespaceAndPath(
-                        "composite", "asset/${resource.namespace}/${resource.path}"
+                    val filterStr = if (filterQuality == FilterQuality.None) "nearest" else "linear"
+                    val textureId = Identifier.fromNamespaceAndPath(
+                        "composite", "asset/$filterStr/${resource.namespace}/${resource.path}"
                     )
                     val tex = AssetTexture(resource.toString(), nativeImage, filterQuality)
-                    minecraft.textureManager.register(texId, tex)
-                    cont.resume(AssetTextureData(tex, texId))
+                    val finalData = AssetTextureCache.putOrMerge(resource, filterQuality, AssetTextureData(tex, textureId))
+                    if (finalData.texture === tex) {
+                        minecraft.textureManager.register(textureId, tex)
+                    }
+                    cont.resume(finalData)
                 } catch (e: Exception) {
                     Composite.logger.info("Error creating GPU texture for $resource", e)
                     nativeImage.close()
@@ -132,7 +184,6 @@ fun AssetImage(
             }
         } ?: return@LaunchedEffect
 
-        textureData?.tex?.close()
         textureData = data
     }
 
@@ -157,23 +208,23 @@ fun AssetImage(
 
                     if (guiW <= 0 || guiH <= 0) return@record
 
-                    val imgW = data.tex.imgWidth.toFloat()
-                    val imgH = data.tex.imgHeight.toFloat()
-                    val scaleX = guiW / imgW
-                    val scaleY = guiH / imgH
+                    val w = data.texture.width.toFloat()
+                    val h = data.texture.height.toFloat()
+                    val scaleX = guiW / w
+                    val scaleY = guiH / h
 
                     val (dstW, dstH) = when (contentScale) {
                         ContentScale.FillBounds -> Pair(guiW, guiH)
                         ContentScale.Crop -> {
                             val s = max(scaleX, scaleY)
-                            Pair(imgW * s, imgH * s)
+                            Pair(w * s, h * s)
                         }
-                        ContentScale.FillWidth -> Pair(guiW, imgH * scaleX)
-                        ContentScale.FillHeight -> Pair(imgW * scaleY, guiH)
-                        ContentScale.None -> Pair(imgW, imgH)
+                        ContentScale.FillWidth -> Pair(guiW, h * scaleX)
+                        ContentScale.FillHeight -> Pair(w * scaleY, guiH)
+                        ContentScale.None -> Pair(w, h)
                         else -> { // Fit
                             val s = min(scaleX, scaleY)
-                            Pair(imgW * s, imgH * s)
+                            Pair(w * s, h * s)
                         }
                     }
 
@@ -202,12 +253,12 @@ fun AssetImage(
                     enableScissor(guiX.toInt(), guiY.toInt(), (guiX + guiW).toInt(), (guiY + guiH).toInt())
                     blit(
                         RenderPipelines.GUI_TEXTURED,
-                        data.texId,
+                        data.textureId,
                         dstX0, dstY0,
                         0f, 0f,
                         dstW0, dstH0,
-                        data.tex.imgWidth, data.tex.imgHeight,
-                        data.tex.imgWidth, data.tex.imgHeight,
+                        data.texture.width, data.texture.height,
+                        data.texture.width, data.texture.height,
                         color
                     )
                     disableScissor()
