@@ -1,13 +1,14 @@
 package dev.aperso.composite
 
+import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import dev.aperso.composite.skia.SkiaContext
 import dev.aperso.composite.test.AssetImageTest
 import dev.aperso.composite.test.ItemTest
 import dev.aperso.composite.test.TextureTest
 import dev.aperso.composite.test.TranslationTest
 import net.fabricmc.api.ClientModInitializer
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientLifecycleEvents
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,9 +24,9 @@ object Composite : ClientModInitializer {
 
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
             dispatcher.register(
-                ClientCommandManager.literal("composite")
+                LiteralArgumentBuilder.literal<FabricClientCommandSource>("composite")
                     .then(
-                        ClientCommandManager.literal("test")
+                        LiteralArgumentBuilder.literal<FabricClientCommandSource>("test")
                             .then(TextureTest.register())
                             .then(ItemTest.register())
                             .then(AssetImageTest.register())

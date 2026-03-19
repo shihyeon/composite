@@ -3,7 +3,7 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.3.0"
     id("org.jetbrains.compose") version "1.9.3"
     id("maven-publish")
-    id("net.fabricmc.fabric-loom-remap") version "1.15-SNAPSHOT"
+    id("net.fabricmc.fabric-loom") version "1.15-SNAPSHOT"
 }
 
 version = "0.5.0"
@@ -11,7 +11,7 @@ group = "dev.aperso"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -22,12 +22,11 @@ repositories {
 val natives = arrayListOf<File>()
 
 dependencies {
-    minecraft("com.mojang:minecraft:1.21.11")
-    mappings(loom.officialMojangMappings())
+    minecraft("com.mojang:minecraft:26.1-pre-3")
 
-    modImplementation("net.fabricmc:fabric-loader:0.18.4")
-    modImplementation("net.fabricmc.fabric-api:fabric-api:0.141.3+1.21.11")
-    modImplementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
+    implementation("net.fabricmc:fabric-loader:0.18.4")
+    implementation("net.fabricmc.fabric-api:fabric-api:0.143.14+26.1")
+    implementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
 
     val transitiveInclude by configurations.creating
     transitiveInclude(implementation(compose.material3)!!)
@@ -64,7 +63,7 @@ publishing {
     publications {
         create<MavenPublication>("mavenJava") {
             artifactId = project.name
-            artifact(tasks["remapJar"]) {
+            artifact(tasks["jar"]) {
                 classifier = ""
             }
         }
