@@ -17,7 +17,6 @@ java {
 
 repositories {
     google()
-    mavenCentral()
     maven("https://maven.neoforged.net/releases/")
     maven {
         name = "Maven for PR #2879" // https://github.com/neoforged/NeoForge/pull/2879
