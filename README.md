@@ -13,7 +13,7 @@ Supports both **Fabric** and **NeoForge**.
     *   **HUD**: Render overlays with `ComposeHud` registered via `ComposeHudRegistry`.
     *   **HUD Layering**: Position your HUD before or after any vanilla HUD element using `HudLayerPosition` and `VanillaHud` constants.
     *   **Items**: Render Minecraft ItemStacks inside Compose layouts.
-    *   **Textures**: Render Minecraft textures (ResourceLocations) inside Compose layouts.
+    *   **Textures**: Render Minecraft textures (Identifier) inside Compose layouts.
     *   **Asset Images**: Load and render PNGs from resource packs as Compose `Image`s.
     *   **Translations**: Integrated i18n support with rich text styling preservation.
 *   **Input Handling**: Automatic mapping of Minecraft mouse and keyboard events to Compose.
@@ -135,13 +135,13 @@ Components.Item(ItemStack(Items.DIAMOND_SWORD))
 
 ```kotlin
 import dev.aperso.composite.component.Components
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import androidx.compose.foundation.layout.size
 import androidx.compose.ui.unit.dp
 
 // Inside a Composable
 Components.Texture(
-    texture = ResourceLocation.fromNamespaceAndPath("minecraft", "textures/block/dirt.png"),
+    texture = Identifier.fromNamespaceAndPath("minecraft", "textures/block/dirt.png"),
     modifier = Modifier.size(64.dp)
 )
 ```
@@ -152,11 +152,11 @@ Load a PNG directly from the resource pack:
 
 ```kotlin
 import dev.aperso.composite.component.Components
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 
 // Inside a Composable
 Components.AssetImage(
-    identifier = ResourceLocation.fromNamespaceAndPath("mymod", "textures/gui/icon.png"),
+    identifier = Identifier.fromNamespaceAndPath("mymod", "textures/gui/icon.png"),
     modifier = Modifier.size(32.dp)
 )
 ```
