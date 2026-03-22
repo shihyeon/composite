@@ -22,10 +22,10 @@ repositories {
 val natives = arrayListOf<File>()
 
 dependencies {
-    minecraft("com.mojang:minecraft:26.1-pre-3")
+    minecraft("com.mojang:minecraft:26.1-rc-2")
 
     implementation("net.fabricmc:fabric-loader:0.18.4")
-    implementation("net.fabricmc.fabric-api:fabric-api:0.143.14+26.1")
+    implementation("net.fabricmc.fabric-api:fabric-api:0.144.0+26.1")
     implementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
 
     val transitiveInclude by configurations.creating
