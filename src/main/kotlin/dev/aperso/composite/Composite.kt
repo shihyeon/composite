@@ -5,6 +5,7 @@ import dev.aperso.composite.hud.ComposeHudRegistryHolder
 import dev.aperso.composite.hud.fabric.FabricComposeHudRegistry
 import dev.aperso.composite.skia.SkiaContext
 import dev.aperso.composite.test.AssetImageTest
+import dev.aperso.composite.test.HudTest
 import dev.aperso.composite.test.ItemTest
 import dev.aperso.composite.test.TextureTest
 import dev.aperso.composite.test.TranslationTest
@@ -34,6 +35,7 @@ object Composite : ClientModInitializer {
                             .then(ItemTest.register())
                             .then(AssetImageTest.register())
                             .then(TranslationTest.register())
+                            .then(HudTest.register())
                     )
             )
         }

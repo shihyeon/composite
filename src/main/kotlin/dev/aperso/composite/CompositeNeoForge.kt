@@ -5,14 +5,15 @@ import dev.aperso.composite.hud.ComposeHudRegistryHolder
 import dev.aperso.composite.hud.neoforge.NeoForgeComposeHudRegistry
 import dev.aperso.composite.skia.SkiaContext
 import dev.aperso.composite.test.AssetImageTest
+import dev.aperso.composite.test.HudTest
 import dev.aperso.composite.test.ItemTest
 import dev.aperso.composite.test.TextureTest
 import dev.aperso.composite.test.TranslationTest
 import net.minecraft.commands.CommandSourceStack
 import net.neoforged.api.distmarker.Dist
 import net.neoforged.fml.common.Mod
-import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent
+import net.neoforged.neoforge.client.event.lifecycle.ClientStartedEvent
 import net.neoforged.neoforge.common.NeoForge
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -24,7 +25,7 @@ class CompositeNeoForge {
     init {
         ComposeHudRegistryHolder.init(NeoForgeComposeHudRegistry())
 
-        NeoForge.EVENT_BUS.addListener { _: ClientPlayerNetworkEvent.LoggingIn ->
+        NeoForge.EVENT_BUS.addListener { _: ClientStartedEvent ->
             logger.info("initializing skia context")
             SkiaContext.initialize()
         }
@@ -38,6 +39,7 @@ class CompositeNeoForge {
                             .then(ItemTest.register())
                             .then(AssetImageTest.register())
                             .then(TranslationTest.register())
+                            .then(HudTest.register())
                     )
             )
         }

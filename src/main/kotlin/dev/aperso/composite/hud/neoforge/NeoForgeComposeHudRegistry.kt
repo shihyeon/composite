@@ -60,16 +60,16 @@ class NeoForgeComposeHudRegistry : ComposeHudRegistry {
         val vanillaId = ID_MAP[position.vanillaElement]
             ?: throw IllegalArgumentException("Unknown vanilla element: ${position.vanillaElement}")
 
-        NeoForge.EVENT_BUS.addListener { event: RenderGuiLayerEvent ->
-            if (event.name != vanillaId) return@addListener
-
-            val shouldFire = when (position.type) {
-                HudLayerPosition.Type.BEFORE -> event is RenderGuiLayerEvent.Pre
-                HudLayerPosition.Type.AFTER -> event is RenderGuiLayerEvent.Post
+        when (position.type) {
+            HudLayerPosition.Type.BEFORE -> NeoForge.EVENT_BUS.addListener(RenderGuiLayerEvent.Pre::class.java) { event ->
+                if (event.name == vanillaId) {
+                    layer.extractRenderState(event.guiGraphics, event.partialTick)
+                }
             }
-
-            if (shouldFire) {
-                layer.extractRenderState(event.guiGraphics, event.partialTick)
+            HudLayerPosition.Type.AFTER -> NeoForge.EVENT_BUS.addListener(RenderGuiLayerEvent.Post::class.java) { event ->
+                if (event.name == vanillaId) {
+                    layer.extractRenderState(event.guiGraphics, event.partialTick)
+                }
             }
         }
     }
