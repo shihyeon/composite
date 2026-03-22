@@ -18,7 +18,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
 @Mod("composite", dist = [Dist.CLIENT])
-class ComposeNeoForge {
+class CompositeNeoForge {
     val logger: Logger = LoggerFactory.getLogger("Composite")
 
     init {
