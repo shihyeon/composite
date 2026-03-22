@@ -17,9 +17,19 @@ java {
 
 repositories {
     google()
+    mavenCentral()
+    maven("https://maven.neoforged.net/releases/")
+    maven {
+        name = "Maven for PR #2879" // https://github.com/neoforged/NeoForge/pull/2879
+        url = uri("https://prmaven.neoforged.net/NeoForge/pr2879")
+        content {
+            includeModule("net.neoforged", "neoforge")
+            includeModule("net.neoforged", "testframework")
+        }
+    }
 }
 
-val natives = arrayListOf<File>()
+val composeDeps by configurations.creating
 
 dependencies {
     minecraft("com.mojang:minecraft:26.1-rc-2")
@@ -28,33 +38,35 @@ dependencies {
     implementation("net.fabricmc.fabric-api:fabric-api:0.144.0+26.1")
     implementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
 
-    val transitiveInclude by configurations.creating
-    transitiveInclude(implementation(compose.material3)!!)
-    transitiveInclude(implementation(compose.materialIconsExtended)!!)
-    transitiveInclude(implementation(compose.desktop.windows_x64)!!)
-    transitiveInclude(implementation(compose.desktop.windows_arm64)!!)
-    transitiveInclude(implementation(compose.desktop.macos_x64)!!)
-    transitiveInclude(implementation(compose.desktop.macos_arm64)!!)
-    transitiveInclude(implementation(compose.desktop.linux_x64)!!)
-    transitiveInclude(implementation(compose.desktop.linux_arm64)!!)
-    transitiveInclude(implementation("androidx.collection:collection:1.5.0")!!)
-    transitiveInclude.resolvedConfiguration.resolvedArtifacts.forEach {
-        val id = it.moduleVersion.id
-        if (id.group == "org.jetbrains.skiko") {
-            natives.add(it.file)
-        } else {
-            include(id.toString())
-        }
-    }
+    // https://maven.neoforged.net/#/releases/net/neoforged
+    compileOnly("net.neoforged:neoforge:26.1.0.0-alpha.0+rc-2.20260321.154221")
+    compileOnly("net.neoforged:bus:8.0.5")
+    compileOnly("net.neoforged.fancymodloader:loader:11.0.3")
+    compileOnly("net.neoforged.fancymodloader:spi:3.0.9")
+
+    composeDeps(implementation(compose.material3)!!)
+    composeDeps(implementation(compose.materialIconsExtended)!!)
+    composeDeps(implementation(compose.desktop.windows_x64)!!)
+    composeDeps(implementation(compose.desktop.windows_arm64)!!)
+    composeDeps(implementation(compose.desktop.macos_x64)!!)
+    composeDeps(implementation(compose.desktop.macos_arm64)!!)
+    composeDeps(implementation(compose.desktop.linux_x64)!!)
+    composeDeps(implementation(compose.desktop.linux_arm64)!!)
+    composeDeps(implementation("androidx.collection:collection:1.5.0")!!)
 }
 
 tasks.jar {
+    val resolvedArtifacts = composeDeps.resolvedConfiguration.resolvedArtifacts
+    val natives = resolvedArtifacts.filter { it.moduleVersion.id.group == "org.jetbrains.skiko" }.map { it.file }
+    val jars = resolvedArtifacts.map { it.file }.filter { it.name.endsWith(".jar") && it !in natives }
     from(natives.map { zipTree(it) })
+    from(jars.map { zipTree(it) })
+
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
 tasks.processResources {
-    filesMatching("fabric.mod.json") {
+    filesMatching(listOf("fabric.mod.json", "META-INF/neoforge.mods.toml")) {
         expand("version" to version)
     }
 }
