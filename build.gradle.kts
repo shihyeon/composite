@@ -64,6 +64,16 @@ tasks.jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+tasks.register("runClientFabric") {
+    group = "composite"
+    dependsOn(tasks.named("runClient"))
+}
+
+tasks.register("runClientNeoForge") {
+    group = "composite"
+    dependsOn(project(":run-neoforge").tasks.named("runClient"))
+}
+
 tasks.processResources {
     filesMatching(listOf("fabric.mod.json", "META-INF/neoforge.mods.toml")) {
         expand("version" to version)

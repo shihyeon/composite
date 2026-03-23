@@ -20,6 +20,7 @@ import org.jetbrains.skia.SurfaceColorFormat
 import org.jetbrains.skia.SurfaceOrigin
 import java.util.ArrayDeque
 import java.util.Deque
+import java.util.concurrent.atomic.AtomicInteger
 
 private const val GL_FRAMEBUFFER = 0x8D40
 private const val GL_COLOR_ATTACHMENT0 = 0x8CE0
@@ -67,8 +68,10 @@ private data class DeferredCleanup(
 
 class SkiaSurface {
     companion object {
-        private val TEXTURE_ID = Identifier.fromNamespaceAndPath("composite", "skia_surface")
+        private val counter = AtomicInteger(0)
     }
+
+    private val textureId = Identifier.fromNamespaceAndPath("composite", "skia_surface_${counter.getAndIncrement()}")
 
     private var currentWidth: Int = 0
     private var currentHeight: Int = 0
@@ -151,7 +154,7 @@ class SkiaSurface {
         val res = active ?: return
 
         if (!textureRegistered) {
-            Minecraft.getInstance().textureManager.register(TEXTURE_ID, skiaTexture)
+            Minecraft.getInstance().textureManager.register(textureId, skiaTexture)
             textureRegistered = true
         }
 
@@ -164,7 +167,7 @@ class SkiaSurface {
 
         val guiW = guiGraphics.guiWidth()
         val guiH = guiGraphics.guiHeight()
-        guiGraphics.blit(TEXTURE_ID, 0, 0, guiW, guiH, 0f, 1f, 1f, 0f)
+        guiGraphics.blit(textureId, 0, 0, guiW, guiH, 0f, 1f, 1f, 0f)
 
         while (true) {
             val call = recordedCalls.poll() ?: break
