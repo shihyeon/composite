@@ -24,7 +24,7 @@ dependencies {
 }
 
 neoForge {
-    version = "26.1.0.0-alpha.0+rc-2.20260321.154221"
+    version = "26.1.0.0-alpha.0+rc-3.20260324.020032"
 
     runs {
         create("client") {
