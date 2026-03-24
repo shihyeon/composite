@@ -39,7 +39,7 @@ val natives = arrayListOf<File>()
 val includedJars = arrayListOf<ResolvedArtifact>()
 
 dependencies {
-    minecraft("com.mojang:minecraft:26.1-rc-2")
+    minecraft("com.mojang:minecraft:26.1")
 
     implementation("net.fabricmc:fabric-loader:0.18.4")
     implementation("net.fabricmc.fabric-api:fabric-api:0.144.0+26.1")
