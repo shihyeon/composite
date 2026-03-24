@@ -5,14 +5,6 @@ plugins {
 repositories {
     google()
     maven("https://maven.neoforged.net/releases/")
-    maven {
-        name = "Maven for PR #2879" // https://github.com/neoforged/NeoForge/pull/2879
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr2879")
-        content {
-            includeModule("net.neoforged", "neoforge")
-            includeModule("net.neoforged", "testframework")
-        }
-    }
 }
 
 dependencies {
@@ -24,7 +16,7 @@ dependencies {
 }
 
 neoForge {
-    version = "26.1.0.0-alpha.0+rc-3.20260324.020032"
+    version = "26.1.0.1-beta"
 
     runs {
         create("client") {

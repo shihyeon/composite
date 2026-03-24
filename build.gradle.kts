@@ -20,14 +20,6 @@ java {
 repositories {
     google()
     maven("https://maven.neoforged.net/releases/")
-    maven {
-        name = "Maven for PR #2879" // https://github.com/neoforged/NeoForge/pull/2879
-        url = uri("https://prmaven.neoforged.net/NeoForge/pr2879")
-        content {
-            includeModule("net.neoforged", "neoforge")
-            includeModule("net.neoforged", "testframework")
-        }
-    }
 }
 
 fun isFatjarGroup(group: String) = group.startsWith("org.jetbrains.compose")
@@ -46,7 +38,7 @@ dependencies {
     implementation("net.fabricmc:fabric-language-kotlin:1.13.9+kotlin.2.3.10")
 
     // https://maven.neoforged.net/#/releases/net/neoforged
-    compileOnly("net.neoforged:neoforge:26.1.0.0-alpha.0+rc-3.20260324.020032")
+    compileOnly("net.neoforged:neoforge:26.1.0.1-beta")
     compileOnly("net.neoforged:bus:8.0.5")
     compileOnly("net.neoforged.fancymodloader:loader:11.0.3")
     compileOnly("net.neoforged.fancymodloader:spi:3.0.9")
