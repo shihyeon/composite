@@ -17,6 +17,6 @@ displayURL="https://modrinth.com/mod/composite"
 [[dependencies.composite]]
 modId="minecraft"
 type="required"
-versionRange="[26.1-rc-2,)"
+versionRange="[26.1,)"
 ordering="NONE"
 side="CLIENT"
